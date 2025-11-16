@@ -28,14 +28,23 @@ namespace Travellark.Controllers
         }
 
         // GET: Destinations
-        public async Task<IActionResult> Index(string? searchString)
+        public async Task<IActionResult> Index(string? searchString, DestinationStatus? statusFilter, DestinationType? typeFilter)
         {
             var destinations = _context.Destinations.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {
-                destinations = destinations
-                    .Where(d => d.Name.Contains(searchString));
+                destinations = destinations.Where(d => d.Name.Contains(searchString));
+            }
+
+            if (statusFilter.HasValue)
+            {
+                destinations = destinations.Where(d => d.Status == statusFilter);
+            }
+
+            if (typeFilter.HasValue)
+            {
+                destinations = destinations.Where(d => d.Type == typeFilter);
             }
 
             return View(await destinations.ToListAsync());
@@ -142,6 +151,32 @@ namespace Travellark.Controllers
             {
                 try
                 {
+                    if (ModelState.IsValid)
+                    {
+                        if (destination.Status == DestinationStatus.Visited && destination.VisitedAt == null)
+                        {
+                            destination.VisitedAt = DateTime.Now;
+                        }
+
+                        try
+                        {
+                            _context.Update(destination);
+                            await _context.SaveChangesAsync();
+                        }
+                        catch (DbUpdateConcurrencyException)
+                        {
+                            if (!DestinationExists(destination.Id))
+                            {
+                                return NotFound();
+                            }
+                            else
+                            {
+                                throw;
+                            }
+                        }
+                        return RedirectToAction(nameof(Index));
+                    }
+
                     _context.Update(destination);
                     await _context.SaveChangesAsync();
                 }

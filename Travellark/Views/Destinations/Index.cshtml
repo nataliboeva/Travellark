@@ -6,20 +6,83 @@
 
 <h1>Index</h1>
 
+<div class="mb-3">
+    <a asp-action="Index" class="btn btn-outline-primary me-2">All</a>
+    <a asp-action="Index" asp-route-statusFilter="Wishlist" class="btn btn-outline-success me-2">Wishlist</a>
+    <a asp-action="Index" asp-route-statusFilter="Visited" class="btn btn-outline-info">Visited</a>
+</div>
+
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form asp-action="Index" method="get" class="mb-3" id="searchForm">
-    <div class="input-group">
-        <input type="text"
-               name="searchString"
-               id="searchInput"
-               class="form-control"
-               placeholder="Search by name..."
-               value="@Context.Request.Query["searchString"]" />
-        <button type="submit" class="btn btn-outline-secondary">Search</button>
+<form asp-action="Index" method="get" id="filterForm" class="mb-3">
+    <div class="row g-2">
+
+        <div class="col-md-4">
+            <input type="text"
+                   name="searchString"
+                   id="searchInput"
+                   value="@Context.Request.Query["searchString"]"
+                   class="form-control"
+                   placeholder="Search by name..." />
+        </div>
+
+        <div class="col-md-3">
+            @{
+                var selectedStatus = Context.Request.Query["statusFilter"].ToString();
+            }
+
+            <select name="statusFilter" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                <option value="">All statuses</option>
+
+                @if (selectedStatus == "Wishlist")
+                {
+                    <option value="Wishlist" selected>Wishlist</option>
+                }
+                else
+                {
+                    <option value="Wishlist">Wishlist</option>
+                }
+
+                @if (selectedStatus == "Visited")
+                {
+                    <option value="Visited" selected>Visited</option>
+                }
+                else
+                {
+                    <option value="Visited">Visited</option>
+                }
+            </select>
+
+        </div>
+
+        <div class="col-md-3">
+            <select name="typeFilter" class="form-select" onchange="document.getElementById('filterForm').submit();">
+                <option value="">All Types</option>
+                @foreach (var type in Enum.GetValues(typeof(Travellark.Models.Enums.DestinationType)))
+                {
+                    var typeString = type.ToString();
+                    var isSelected = Context.Request.Query["typeFilter"] == typeString;
+
+                    if (isSelected)
+                    {
+                        <option value="@typeString" selected>@typeString</option>
+                    }
+                    else
+                    {
+                        <option value="@typeString">@typeString</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-outline-secondary w-100">Search</button>
+        </div>
     </div>
 </form>
+
+
 
 
 <table class="table">
@@ -80,7 +143,7 @@
 @section Scripts {
     <script>
         const searchInput = document.getElementById('searchInput');
-        const searchForm = document.getElementById('searchForm');
+        const searchForm = document.getElementById('filterForm');
 
         let timer;
         if (searchInput && searchForm) {
@@ -102,5 +165,3 @@
         }
     </script>
 }
-
-
