@@ -16,7 +16,25 @@
 
     <!-- MAIN INFO -->
     <div class="card-body">
-        <h4 class="card-title">@Model.Name</h4>
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h4 class="card-title mb-0">@Model.Name</h4>
+            @{
+                bool isFavorited = ViewBag.IsFavorited ?? false;
+            }
+            <form asp-action="ToggleFavorite" method="post" style="display: inline;">
+                <input type="hidden" name="id" value="@Model.Id" />
+                <button type="submit" class="btn btn-link p-0 border-0" style="font-size: 1.5rem; line-height: 1;">
+                    @if (isFavorited)
+                    {
+                        <i class="fa-solid fa-heart text-danger"></i>
+                    }
+                    else
+                    {
+                        <i class="fa-regular fa-heart text-danger"></i>
+                    }
+                </button>
+            </form>
+        </div>
         <h6 class="card-subtitle text-muted mb-2">
             @Model.Country
             @if (!string.IsNullOrEmpty(Model.Region))
@@ -92,38 +110,96 @@
     <!-- MAP + BUTTONS -->
     <div class="card-body">
         @* LOCATION / MAP *@
-        @if (!string.IsNullOrWhiteSpace(Model.MapUrl))
-        {
-            <div class="mt-3">
-                <h6>Location</h6>
+        <div class="mt-3">
+            <h6>Location</h6>
+
+            @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+            {
+                <div class="mb-2">
+                    <small class="text-muted">
+                        <i class="fa-solid fa-location-dot"></i> 
+                        Coordinates: @Model.Latitude.Value.ToString("F6"), @Model.Longitude.Value.ToString("F6")
+                    </small>
+                </div>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(Model.MapUrl))
+            {
+                string? mapEmbedUrl = null;
+                // Check if it's already an embed URL
+                if (Model.MapUrl.Contains("/embed"))
+                {
+                    mapEmbedUrl = Model.MapUrl;
+                }
+                // Try to convert Google Maps URL to embed format
+                else if (Model.MapUrl.Contains("maps.google.com") || Model.MapUrl.Contains("goo.gl/maps") || Model.MapUrl.Contains("maps.app.goo.gl"))
+                {
+                    // Extract coordinates from URL
+                    var atChar = "@";
+                    var pattern = "[" + atChar + "?](?:q=)?(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)";
+                    var coordMatch = System.Text.RegularExpressions.Regex.Match(Model.MapUrl, pattern);
+                    if (coordMatch.Success)
+                    {
+                        var lat = coordMatch.Groups[1].Value;
+                        var lng = coordMatch.Groups[2].Value;
+                        mapEmbedUrl = $"https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3000!2d{lng}!3d{lat}!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z!5e0!3m2!1sen!2sus!4v0!5m2!1sen!2sus";
+                    }
+                    // Try to extract place ID
+                    else
+                    {
+                        var placeIdMatch = System.Text.RegularExpressions.Regex.Match(Model.MapUrl, @"/place/([^/?]+)");
+                        if (placeIdMatch.Success)
+                        {
+                            var placeId = System.Net.WebUtility.UrlEncode(placeIdMatch.Groups[1].Value);
+                            mapEmbedUrl = $"https://www.google.com/maps/embed/v1/place?key=&q=place_id:{placeId}";
+                        }
+                    }
+                }
 
                 <div class="mb-2">
                     <a href="@Model.MapUrl"
                        target="_blank"
                        rel="noopener noreferrer"
-                       class="btn btn-outline-primary btn-sm">
-                        Open in Google Maps
+                       class="btn btn-outline-primary btn-sm me-2">
+                        <i class="fa-solid fa-map-location-dot"></i> Open in Google Maps
+                    </a>
+                    <a asp-controller="Map" asp-action="Index" class="btn btn-outline-success btn-sm">
+                        <i class="fa-solid fa-globe"></i> View on World Map
                     </a>
                 </div>
 
-                <div class="ratio ratio-16x9">
-                    <iframe src="@Model.MapUrl"
-                            style="border:0;"
-                            loading="lazy"
-                            referrerpolicy="no-referrer-when-downgrade">
-                    </iframe>
-                </div>
-            </div>
-        }
-        else
-        {
-            <div class="mt-3">
-                <h6>Location</h6>
-                <p class="text-muted mb-0">
+                @if (!string.IsNullOrEmpty(mapEmbedUrl))
+                {
+                    <div class="ratio ratio-16x9">
+                        <iframe src="@mapEmbedUrl"
+                                style="border:0;"
+                                loading="lazy"
+                                allowfullscreen
+                                referrerpolicy="no-referrer-when-downgrade">
+                        </iframe>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        <i class="fa-solid fa-info-circle"></i> 
+                        <small>Click the button above to view the location on Google Maps. To embed a map, use a Google Maps embed URL or a URL with coordinates.</small>
+                    </div>
+                }
+            }
+            else
+            {
+                <p class="text-muted mb-2">
                     No map link added yet.
                 </p>
-            </div>
-        }
+                @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                {
+                    <a asp-controller="Map" asp-action="Index" class="btn btn-outline-success btn-sm">
+                        <i class="fa-solid fa-globe"></i> View on World Map
+                    </a>
+                }
+            }
+        </div>
 
 
         @if (Model.Status == DestinationStatus.Wishlist)

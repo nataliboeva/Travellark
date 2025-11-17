@@ -1,0 +1,376 @@
+@using Travellark.Models.Enums
+@{
+    ViewData["Title"] = "Dashboard";
+    var totalDestinations = (int)ViewBag.TotalDestinations;
+    var totalVisited = (int)ViewBag.TotalVisited;
+    var totalWishlist = (int)ViewBag.TotalWishlist;
+    var totalFavorites = (int)ViewBag.TotalFavorites;
+    var avgRating = (double)ViewBag.AvgRating;
+    var ratedDestinations = (int)ViewBag.RatedDestinations;
+    var byType = ViewBag.ByType as List<dynamic> ?? new List<dynamic>();
+    var byStatus = ViewBag.ByStatus as List<dynamic> ?? new List<dynamic>();
+    var topCountries = ViewBag.TopCountries as List<dynamic> ?? new List<dynamic>();
+    var topVisitedCountries = ViewBag.TopVisitedCountries as List<dynamic> ?? new List<dynamic>();
+    var topRatedDestinations = ViewBag.TopRatedDestinations as List<Travellark.Models.Destination> ?? new List<Travellark.Models.Destination>();
+    var ratingDistribution = ViewBag.RatingDistribution as List<dynamic> ?? new List<dynamic>();
+    var recentActivity = ViewBag.RecentActivity as List<dynamic> ?? new List<dynamic>();
+    var recentVisits = ViewBag.RecentVisits as List<dynamic> ?? new List<dynamic>();
+    var totalCountriesVisited = (int)(ViewBag.TotalCountriesVisited ?? 0);
+    var mostVisitedType = ViewBag.MostVisitedType as dynamic;
+    var favoriteDestinations = ViewBag.FavoriteDestinations as List<Travellark.Models.Destination> ?? new List<Travellark.Models.Destination>();
+}
+
+<h2 class="mb-4 fw-normal">Dashboard</h2>
+
+<!-- Key Metrics -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Total Destinations</p>
+                <h4 class="mb-0">@totalDestinations</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Visited</p>
+                <h4 class="mb-0 text-success">@totalVisited</h4>
+                @if (totalDestinations > 0)
+                {
+                    <small class="text-muted">@((totalVisited * 100.0 / totalDestinations).ToString("F0"))%</small>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Wishlist</p>
+                <h4 class="mb-0">@totalWishlist</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <p class="text-muted small mb-1">Favorites</p>
+                <h4 class="mb-0">@totalFavorites</h4>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Top Rated Destinations -->
+    @if (topRatedDestinations.Any())
+    {
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Top Rated Destinations</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var dest in topRatedDestinations)
+                        {
+                            <div class="list-group-item border-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">@dest.Name</h6>
+                                        <p class="text-muted small mb-1">@dest.Country</p>
+                                        <div class="text-warning">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                if (dest.Rating >= i)
+                                                {
+                                                    <i class="fa-solid fa-star" style="font-size: 0.75rem;"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="fa-regular fa-star" style="font-size: 0.75rem;"></i>
+                                                }
+                                            }
+                                            <span class="text-muted small ms-1">@dest.Rating</span>
+                                        </div>
+                                    </div>
+                                    <a asp-controller="Destinations" asp-action="Details" asp-route-id="@dest.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Top Visited Countries -->
+    @if (topVisitedCountries.Any())
+    {
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Top Visited Countries</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var country in topVisitedCountries)
+                        {
+                            var count = (int)country.Count;
+                            <div class="list-group-item border-0">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="fw-medium">@country.Country</span>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <span class="badge bg-primary rounded-pill me-2">@count</span>
+                                        <div class="progress" style="width: 100px; height: 6px;">
+                                            @{
+                                                var maxCount = topVisitedCountries.Max(c => (int)c.Count);
+                                                var percentage = maxCount > 0 ? (count * 100.0 / maxCount) : 0;
+                                            }
+                                            <div class="progress-bar" role="progressbar" style="width: @percentage%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Statistics Row -->
+<div class="row g-4 mt-2">
+    <!-- Destinations by Type -->
+    @if (byType.Any())
+    {
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Destinations by Type</h6>
+                </div>
+                <div class="card-body">
+                    @foreach (var item in byType)
+                    {
+                        var count = (int)item.Count;
+                        var percentage = totalDestinations > 0 ? (count * 100.0 / totalDestinations) : 0;
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">@item.Type</span>
+                                <span class="small text-muted">@count</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar" role="progressbar" style="width: @percentage%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Destinations by Status -->
+    @if (byStatus.Any())
+    {
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Destinations by Status</h6>
+                </div>
+                <div class="card-body">
+                    @foreach (var item in byStatus)
+                    {
+                        var count = (int)item.Count;
+                        var percentage = totalDestinations > 0 ? (count * 100.0 / totalDestinations) : 0;
+                        var statusClass = item.Status == "Visited" ? "bg-success" : "bg-secondary";
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="small">@item.Status</span>
+                                <span class="small text-muted">@count</span>
+                            </div>
+                            <div class="progress" style="height: 6px;">
+                                <div class="progress-bar @statusClass" role="progressbar" style="width: @percentage%"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Average Rating -->
+@if (ratedDestinations > 0)
+{
+    <div class="row mt-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Average Rating</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="text-warning me-3">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (avgRating >= i)
+                                {
+                                    <i class="fa-solid fa-star"></i>
+                                }
+                                else if (avgRating >= i - 0.5)
+                                {
+                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-regular fa-star"></i>
+                                }
+                            }
+                        </div>
+                        <div>
+                            <h5 class="mb-0">@avgRating.ToString("F2")</h5>
+                            <small class="text-muted">Based on @ratedDestinations destinations</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Distribution -->
+        @if (ratingDistribution.Any())
+        {
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-transparent border-bottom py-3">
+                        <h6 class="mb-0 fw-semibold">Rating Distribution</h6>
+                    </div>
+                    <div class="card-body">
+                        @foreach (var item in ratingDistribution)
+                        {
+                            var count = (int)item.Count;
+                            var maxCount = ratingDistribution.Max(r => (int)r.Count);
+                            var percentage = maxCount > 0 ? (count * 100.0 / maxCount) : 0;
+                            <div class="mb-2">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small">
+                                        @for (int i = 0; i < (int)item.Rating; i++)
+                                        {
+                                            <i class="fa-solid fa-star text-warning" style="font-size: 0.7rem;"></i>
+                                        }
+                                    </span>
+                                    <span class="small text-muted">@count</span>
+                                </div>
+                                <div class="progress" style="height: 4px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: @percentage%"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Most Visited Type and Favorites -->
+<div class="row g-4 mt-2">
+    @if (mostVisitedType != null)
+    {
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Most Visited Type</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-0">@mostVisitedType.Type</h5>
+                            <small class="text-muted">@mostVisitedType.Count destinations</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (favoriteDestinations.Any())
+    {
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Favorite Destinations</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (var dest in favoriteDestinations)
+                        {
+                            <div class="list-group-item border-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">@dest.Name</h6>
+                                        <p class="text-muted small mb-1">@dest.Country</p>
+                                        @if (dest.Rating.HasValue)
+                                        {
+                                            <div class="text-warning">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    <i class="fa-solid fa-star" style="font-size: 0.7rem;"></i>
+                                                }
+                                            </div>
+                                        }
+                                    </div>
+                                    <a asp-controller="Destinations" asp-action="Details" asp-route-id="@dest.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Recent Visits -->
+@if (recentVisits.Any())
+{
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-semibold">Recent Visits</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="border-0">Destination</th>
+                                    <th class="border-0">Country</th>
+                                    <th class="border-0">Visited</th>
+                                    <th class="border-0 text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var visit in recentVisits.Take(5))
+                                {
+                                    <tr>
+                                        <td>@visit.Name</td>
+                                        <td class="text-muted">@visit.Country</td>
+                                        <td class="text-muted small">@visit.VisitedAt.ToString("dd.MM.yyyy")</td>
+                                        <td class="text-end">
+                                            <a asp-controller="Destinations" asp-action="Details" asp-route-id="@visit.Id" class="btn btn-sm btn-outline-primary">View</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

@@ -57,6 +57,13 @@ namespace Travellark.Controllers
 
             var destinations = await query.ToListAsync();
 
+            // Get favorite IDs for the user
+            var favoriteIds = await _context.Favorites
+                .Where(f => f.UserId == userId)
+                .Select(f => f.DestinationId)
+                .ToListAsync();
+            ViewBag.FavoriteIds = favoriteIds;
+
             var totalVisited = await _context.Destinations
                 .CountAsync(d => d.UserId == userId && d.Status == DestinationStatus.Visited);
 
@@ -93,6 +100,11 @@ namespace Travellark.Controllers
             {
                 return NotFound();
             }
+
+            // Check if destination is favorited
+            var isFavorited = await _context.Favorites
+                .AnyAsync(f => f.DestinationId == id && f.UserId == userId);
+            ViewBag.IsFavorited = isFavorited;
 
             return View(destination);
         }
@@ -215,6 +227,8 @@ namespace Travellark.Controllers
             existing.InspirationText = destination.InspirationText;
             existing.Notes = destination.Notes;
             existing.MapUrl = destination.MapUrl;
+            existing.Latitude = destination.Latitude;
+            existing.Longitude = destination.Longitude;
             existing.VisitedAt = destination.VisitedAt;
 
             // CreatedAt и UserId НЕ пипаме
@@ -325,6 +339,50 @@ namespace Travellark.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleFavorite(int id, string? returnUrl)
+        {
+            var userId = _userManager.GetUserId(User);
+
+            var destination = await _context.Destinations
+                .FirstOrDefaultAsync(d => d.Id == id && d.UserId == userId);
+
+            if (destination == null)
+            {
+                return NotFound();
+            }
+
+            var favorite = await _context.Favorites
+                .FirstOrDefaultAsync(f => f.DestinationId == id && f.UserId == userId);
+
+            if (favorite == null)
+            {
+                // Add to favorites
+                favorite = new Models.Favorite
+                {
+                    UserId = userId,
+                    DestinationId = id,
+                    CreatedAt = DateTime.Now
+                };
+                _context.Favorites.Add(favorite);
+            }
+            else
+            {
+                // Remove from favorites
+                _context.Favorites.Remove(favorite);
+            }
+
+            await _context.SaveChangesAsync();
+
+            if (!string.IsNullOrEmpty(returnUrl))
+            {
+                return Redirect(returnUrl);
+            }
+
+            return RedirectToAction(nameof(Details), new { id = id });
+        }
 
         private bool DestinationExists(int id)
         {

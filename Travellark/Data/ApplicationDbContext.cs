@@ -11,6 +11,7 @@ namespace Travellark.Data
         {
         }
         public DbSet<Destination> Destinations { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
 
     }
 }

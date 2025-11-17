@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Travellark.Models.Enums;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Travellark.Models.Enums;
 using Microsoft.AspNetCore.Http;
 
 namespace Travellark.Models
@@ -46,6 +45,12 @@ namespace Travellark.Models
 
         [Display(Name = "Map Link")]
         public string? MapUrl { get; set; }
+
+        [Display(Name = "Latitude")]
+        public double? Latitude { get; set; }
+
+        [Display(Name = "Longitude")]
+        public double? Longitude { get; set; }
 
         [Display(Name = "Added On")]
         public DateTime CreatedAt { get; set; }

@@ -33,16 +33,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
-                        <a class="nav-link" asp-controller="Destinations" asp-action="Index">All</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Destinations" asp-action="Index" asp-route-statusFilter="Wishlist">Wishlist</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" asp-controller="Destinations" asp-action="Index" asp-route-statusFilter="Visited">Visited</a>
+                        <a class="nav-link" asp-controller="Destinations" asp-action="Index">Destinations</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" asp-controller="Destinations" asp-action="Create">Add Destination</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Map" asp-action="Index">Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
                     </li>
                 </ul>
                 <partial name="_LoginPartial" />

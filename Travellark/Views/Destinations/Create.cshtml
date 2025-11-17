@@ -76,14 +76,39 @@
 
                     <div class="mb-3">
                         <label asp-for="MapUrl" class="form-label"></label>
-                        <input asp-for="MapUrl" class="form-control" />
+                        <input asp-for="MapUrl" class="form-control" id="mapUrlInput" placeholder="Paste Google Maps URL here" />
+                        <small class="form-text text-muted">We'll try to extract coordinates automatically, or enter them manually below.</small>
                         <span asp-validation-for="MapUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Latitude" class="form-label"></label>
+                            <input asp-for="Latitude" type="number" step="any" class="form-control" id="latitudeInput" placeholder="e.g. 42.6977" />
+                            <small class="form-text text-muted">Or click on map to get coordinates</small>
+                            <span asp-validation-for="Latitude" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Longitude" class="form-label"></label>
+                            <input asp-for="Longitude" type="number" step="any" class="form-control" id="longitudeInput" placeholder="e.g. 23.3219" />
+                            <span asp-validation-for="Longitude" class="text-danger"></span>
+                        </div>
                     </div>
 
                     <div class="mb-3">
                         <label asp-for="ImageFile" class="form-label"></label>
-                        <input asp-for="ImageFile" type="file" class="form-control" />
+                        <input asp-for="ImageFile" type="file" class="form-control" id="imageInput" accept="image/*" />
                         <span asp-validation-for="ImageFile" class="text-danger"></span>
+                        
+                        <!-- Image Preview and Crop Area -->
+                        <div id="imagePreviewContainer" style="display: none; margin-top: 15px;">
+                            <div class="mb-2">
+                                <img id="imagePreview" style="max-width: 100%; max-height: 400px; display: block; margin: 0 auto;" />
+                            </div>
+                            <div class="text-center">
+                                <button type="button" class="btn btn-secondary btn-sm" id="removeImageBtn">Remove Image</button>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="d-flex justify-content-between">
@@ -131,6 +156,69 @@
 
         if (ratingInput.value) {
             updateStars(ratingInput.value);
+        }
+
+        // Image Preview
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const imagePreviewContainer = document.getElementById('imagePreviewContainer');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+
+        if (imageInput) {
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        imagePreview.src = e.target.result;
+                        imagePreviewContainer.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    imagePreviewContainer.style.display = 'none';
+                }
+            });
+        }
+
+        if (removeImageBtn) {
+            removeImageBtn.addEventListener('click', function() {
+                imageInput.value = '';
+                imagePreview.src = '';
+                imagePreviewContainer.style.display = 'none';
+            });
+        }
+
+        // Extract coordinates from Google Maps URL
+        const mapUrlInput = document.getElementById('mapUrlInput');
+        const latitudeInput = document.getElementById('latitudeInput');
+        const longitudeInput = document.getElementById('longitudeInput');
+
+        if (mapUrlInput) {
+            mapUrlInput.addEventListener('blur', function() {
+                const url = this.value;
+                if (!url) return;
+
+                // Try to extract coordinates from URL
+                // Pattern 1: coordinates in URL format (at symbol or ? followed by coordinates)
+                var atSymbol = String.fromCharCode(64);
+                var pattern = new RegExp('[' + atSymbol + '?](?:q=)?(-?\\d+\\.?\\d*),(-?\\d+\\.?\\d*)');
+                const coordMatch = url.match(pattern);
+                if (coordMatch) {
+                    latitudeInput.value = coordMatch[1];
+                    longitudeInput.value = coordMatch[2];
+                    return;
+                }
+
+                // Pattern 2: /place/... might have coordinates in embed
+                if (url.includes('/place/')) {
+                    // Try to get from embed URL if available
+                    const embedMatch = url.match(/!3d(-?\d+\.?\d*)!4d(-?\d+\.?\d*)/);
+                    if (embedMatch) {
+                        latitudeInput.value = embedMatch[1];
+                        longitudeInput.value = embedMatch[2];
+                    }
+                }
+            });
         }
     </script>
 }

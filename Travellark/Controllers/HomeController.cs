@@ -1,9 +1,11 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Travellark.Models;
 
 namespace Travellark.Controllers
 {
+    [Authorize]
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -13,6 +15,7 @@ namespace Travellark.Controllers
             _logger = logger;
         }
 
+        [AllowAnonymous]
         public IActionResult Index()
         {
             return View();

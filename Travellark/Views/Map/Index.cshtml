@@ -1,0 +1,161 @@
+@using Travellark.Models.Enums
+@using System.Text.Json
+@{
+    ViewData["Title"] = "World Map";
+    var destinations = ViewBag.Destinations;
+    var visitedCount = (int)(ViewBag.VisitedCount ?? 0);
+    var wishlistCount = (int)(ViewBag.WishlistCount ?? 0);
+    var destinationsList = destinations as System.Collections.IEnumerable;
+    var hasDestinations = destinationsList != null && destinationsList.Cast<object>().Any();
+    var destinationsJson = destinations != null ? System.Text.Json.JsonSerializer.Serialize(destinations) : "[]";
+}
+
+<h2 class="mb-4 fw-normal">World Map</h2>
+
+<div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex gap-4 align-items-center">
+                    <div>
+                        <span class="badge bg-success me-2">●</span>
+                        <span class="small">Visited (@visitedCount)</span>
+                    </div>
+                    <div>
+                        <span class="badge bg-secondary me-2">●</span>
+                        <span class="small">Wishlist (@wishlistCount)</span>
+                    </div>
+                    @if (hasDestinations)
+                    {
+                        <div class="ms-auto">
+                            <small class="text-muted">@(destinationsList.Cast<object>().Count()) destinations on map</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (hasDestinations)
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div id="map" style="height: 600px; width: 100%;"></div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card border-0 shadow-sm">
+        <div class="card-body text-center py-5">
+            <i class="fa-solid fa-map fa-3x text-muted mb-3"></i>
+            <h5 class="mb-2">No destinations with coordinates</h5>
+            <p class="text-muted mb-3">Add coordinates to your destinations to see them on the map.</p>
+            <a asp-controller="Destinations" asp-action="Create" class="btn btn-primary">Add Destination</a>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (hasDestinations)
+    {
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        
+        <script>
+        // Initialize map
+        var map = L.map('map').setView([20, 0], 2);
+
+        // Add tile layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Destinations data
+        var destinations = @Html.Raw(destinationsJson);
+
+        // Create markers
+        var visitedMarkers = [];
+        var wishlistMarkers = [];
+
+        destinations.forEach(function(dest) {
+            var lat = dest.latitude;
+            var lng = dest.longitude;
+            var status = dest.status;
+            var name = dest.name;
+            var country = dest.country;
+            var region = dest.region || '';
+            var id = dest.id;
+            var imageUrl = dest.imageUrl || '';
+            var rating = dest.rating;
+
+            // Create popup content
+            var popupContent = '<div style="min-width: 200px;">';
+            popupContent += '<h6 class="mb-2">' + name + '</h6>';
+            popupContent += '<p class="text-muted small mb-2">' + country;
+            if (region) {
+                popupContent += ', ' + region;
+            }
+            popupContent += '</p>';
+            
+            if (rating) {
+                popupContent += '<div class="mb-2">';
+                for (var i = 0; i < rating; i++) {
+                    popupContent += '<i class="fa-solid fa-star text-warning" style="font-size: 0.8rem;"></i>';
+                }
+                popupContent += '</div>';
+            }
+            
+            popupContent += '<a href="/Destinations/Details/' + id + '" class="btn btn-sm btn-primary w-100">View Details</a>';
+            popupContent += '</div>';
+
+            // Choose marker color based on status
+            var markerColor = status === 'Visited' ? '#198754' : '#6c757d';
+            var markerIcon = L.divIcon({
+                className: 'custom-marker',
+                html: '<div style="background-color: ' + markerColor + '; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+
+            var marker = L.marker([lat, lng], { icon: markerIcon })
+                .addTo(map)
+                .bindPopup(popupContent);
+
+            if (status === 'Visited') {
+                visitedMarkers.push(marker);
+            } else {
+                wishlistMarkers.push(marker);
+            }
+        });
+
+        // Fit map to show all markers
+        if (destinations.length > 0) {
+            var group = new L.featureGroup(visitedMarkers.concat(wishlistMarkers));
+            map.fitBounds(group.getBounds().pad(0.1));
+        }
+
+        // Layer control
+        var visitedLayer = L.layerGroup(visitedMarkers);
+        var wishlistLayer = L.layerGroup(wishlistMarkers);
+
+        var overlayMaps = {
+            "Visited": visitedLayer,
+            "Wishlist": wishlistLayer
+        };
+
+        L.control.layers(null, overlayMaps).addTo(map);
+    </script>
+
+    <style>
+        .custom-marker {
+            background: transparent !important;
+            border: none !important;
+        }
+    </style>
+        }
+    }
+}
+
