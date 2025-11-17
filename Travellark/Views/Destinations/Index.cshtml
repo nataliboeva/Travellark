@@ -1,4 +1,6 @@
-﻿@model IEnumerable<Travellark.Models.Destination>
+﻿@using Travellark.Models.Enums
+
+@model IEnumerable<Travellark.Models.Destination>
 
 @{
     ViewData["Title"] = "Index";
@@ -15,131 +17,209 @@
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<form asp-action="Index" method="get" id="filterForm" class="mb-3">
-    <div class="row g-2">
+<form asp-action="Index" method="get" id="filterForm" class="mb-4">
+    <div class="input-group">
+        
+        <!-- Search -->
+        <input type="text"
+               name="searchString"
+               id="searchInput"
+               value="@Context.Request.Query["searchString"]"
+               class="form-control"
+               placeholder="Search destinations..." />
 
-        <div class="col-md-4">
-            <input type="text"
-                   name="searchString"
-                   id="searchInput"
-                   value="@Context.Request.Query["searchString"]"
-                   class="form-control"
-                   placeholder="Search by name..." />
-        </div>
+        <!-- Status Filter -->
+        @{
+            var selectedStatus = Context.Request.Query["statusFilter"].ToString();
+        }
+        <select name="statusFilter" class="form-select"
+                onchange="document.getElementById('filterForm').submit();">
+            <option value="">All Statuses</option>
 
-        <div class="col-md-3">
-            @{
-                var selectedStatus = Context.Request.Query["statusFilter"].ToString();
+            @if (selectedStatus == "Wishlist")
+            {
+                <option value="Wishlist" selected>Wishlist</option>
+            }
+            else
+            {
+                <option value="Wishlist">Wishlist</option>
             }
 
-            <select name="statusFilter" class="form-select" onchange="document.getElementById('filterForm').submit();">
-                <option value="">All statuses</option>
+            @if (selectedStatus == "Visited")
+            {
+                <option value="Visited" selected>Visited</option>
+            }
+            else
+            {
+                <option value="Visited">Visited</option>
+            }
+        </select>
 
-                @if (selectedStatus == "Wishlist")
+
+        <!-- Type Filter -->
+        @{
+            var selectedType = Context.Request.Query["typeFilter"].ToString();
+        }
+        <select name="typeFilter" class="form-select"
+                onchange="document.getElementById('filterForm').submit();">
+            <option value="">All Types</option>
+
+            @foreach (var type in Enum.GetValues(typeof(Travellark.Models.Enums.DestinationType)))
+            {
+                var typeString = type.ToString();
+
+                if (selectedType == typeString)
                 {
-                    <option value="Wishlist" selected>Wishlist</option>
+                    <option value="@typeString" selected>@typeString</option>
                 }
                 else
                 {
-                    <option value="Wishlist">Wishlist</option>
+                    <option value="@typeString">@typeString</option>
                 }
+            }
+        </select>
 
-                @if (selectedStatus == "Visited")
-                {
-                    <option value="Visited" selected>Visited</option>
-                }
-                else
-                {
-                    <option value="Visited">Visited</option>
-                }
-            </select>
 
-        </div>
+        <!-- Clear button -->
+        <a asp-action="Index" class="btn btn-outline-secondary">Clear</a>
 
-        <div class="col-md-3">
-            <select name="typeFilter" class="form-select" onchange="document.getElementById('filterForm').submit();">
-                <option value="">All Types</option>
-                @foreach (var type in Enum.GetValues(typeof(Travellark.Models.Enums.DestinationType)))
-                {
-                    var typeString = type.ToString();
-                    var isSelected = Context.Request.Query["typeFilter"] == typeString;
-
-                    if (isSelected)
-                    {
-                        <option value="@typeString" selected>@typeString</option>
-                    }
-                    else
-                    {
-                        <option value="@typeString">@typeString</option>
-                    }
-                }
-            </select>
-        </div>
-
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-outline-secondary w-100">Search</button>
-        </div>
     </div>
 </form>
 
 
-
-
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Name)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Country)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Type)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Rating)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Country)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Type)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Rating)
-            </td>
-            <td>
-                @item.CreatedAt.ToString("dd.MM.yyyy")
-
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
+@if (!Model.Any())
+{
+    <div class="text-center mt-5">
+        <h3>No destinations yet</h3>
+        <p class="text-muted">
+            Start adding places you dream to visit.
+        </p>
+        <a asp-action="Create" class="btn btn-primary">
+            Add your first destination
+        </a>
+    </div>
 }
-    </tbody>
-</table>
+else
+{
+    <div class="row mb-4">
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted">Visited</h6>
+                    <h3 class="card-title mb-0">@ViewBag.TotalVisited</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted">Wishlist</h6>
+                    <h3 class="card-title mb-0">@ViewBag.TotalWishlist</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-muted">Avg. Rating (visited)</h6>
+                    <div class="card-title mb-0 text-warning">
+                        @{
+                            double avg = ViewBag.AvgRating;
+                            for (int i = 1; i <= 5; i++)
+                            {
+                                if (avg >= i)
+                                {
+                                    <i class="fa-solid fa-star"></i>
+                                }
+                                else if (avg >= i - 0.5)
+                                {
+                                    <i class="fa-solid fa-star-half-stroke"></i>
+                                }
+                                else
+                                {
+                                    <i class="fa-regular fa-star"></i>
+                                }
+                            }
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        @foreach (var item in Model)
+        {
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+
+                    <img src="@(item.ImageUrl ?? "https://placehold.co/600x400?text=No+Image")"
+                         class="card-img-top"
+                         alt="@item.Name"
+                         style="height: 180px; object-fit: cover;" />
+
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Name</h5>
+
+                        @{
+                            var statusClass = item.Status == DestinationStatus.Visited ? "bg-success" : "bg-secondary";
+                        }
+                        <span class="badge @statusClass mb-2">
+                            @item.Status
+                        </span>
+
+                        <p class="card-text text-muted mt-2">
+                            @item.Country
+                            @if (!string.IsNullOrEmpty(item.Region))
+                            {
+                                <span> · @item.Region</span>
+                            }
+                            <br />
+                            <strong>@item.Type</strong>
+                            <br />
+
+                            @if (item.Rating.HasValue)
+                            {
+                                double rating = item.Rating.Value;
+                                <div class="text-warning">
+                                    @{
+                                        for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (rating >= i)
+                                            {
+                                                <i class="fa-solid fa-star"></i>
+                                            }
+                                            else if (rating >= i - 0.5)
+                                            {
+                                                <i class="fa-solid fa-star-half-stroke"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fa-regular fa-star"></i>
+                                            }
+                                        }
+                                    }
+                                </div>
+                            }
+
+                        </p>
+                    </div>
+
+                    <div class="card-footer bg-white border-0 pb-3">
+                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-primary btn-sm w-100">
+                            View Details
+                        </a>
+                    </div>
+
+
+
+                </div>
+            </div>
+        }
+    </div>
+}
+
 @section Scripts {
     <script>
         const searchInput = document.getElementById('searchInput');

@@ -1,85 +1,137 @@
 ﻿@model Travellark.Models.Destination
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Add Destination";
 }
 
-<h1>Create</h1>
+<h2 class="mt-3 mb-3">Add Destination</h2>
 
-<h4>Destination</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create" enctype="multipart/form-data">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Country" class="control-label"></label>
-                <input asp-for="Country" class="form-control" />
-                <span asp-validation-for="Country" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Region" class="control-label"></label>
-                <input asp-for="Region" class="form-control" />
-                <span asp-validation-for="Region" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Type" class="control-label"></label>
-                <select asp-for="Type" class="form-control"
-                        asp-items="Html.GetEnumSelectList<Travellark.Models.Enums.DestinationType>()">
-                </select>
-                <span asp-validation-for="Type" class="text-danger"></span>
-            </div>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form asp-action="Create" enctype="multipart/form-data">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <select asp-for="Status" class="form-control"
-                        asp-items="Html.GetEnumSelectList<Travellark.Models.Enums.DestinationStatus>()">
-                </select>
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
 
-            <div class="form-group">
-                <label asp-for="Rating" class="control-label"></label>
-                <input asp-for="Rating" class="form-control" />
-                <span asp-validation-for="Rating" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="InspirationText" class="control-label"></label>
-                <input asp-for="InspirationText" class="form-control" />
-                <span asp-validation-for="InspirationText" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Notes" class="control-label"></label>
-                <input asp-for="Notes" class="form-control" />
-                <span asp-validation-for="Notes" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ImageFile" class="control-label"></label>
-                <input asp-for="ImageFile" type="file" class="form-control" />
-                <span asp-validation-for="ImageFile" class="text-danger"></span>
-            </div>
+                    <div class="row">
+                        <div class="mb-3 col-md-6">
+                            <label asp-for="Country" class="form-label"></label>
+                            <input asp-for="Country" class="form-control" />
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label asp-for="Region" class="form-label"></label>
+                            <input asp-for="Region" class="form-control" />
+                            <span asp-validation-for="Region" class="text-danger"></span>
+                        </div>
+                    </div>
 
-            <div class="form-group">
-                <label asp-for="MapUrl" class="control-label"></label>
-                <input asp-for="MapUrl" class="form-control" />
-                <span asp-validation-for="MapUrl" class="text-danger"></span>
+                    <div class="row">
+                        <div class="mb-3 col-md-6">
+                            <label asp-for="Type" class="form-label"></label>
+                            <select asp-for="Type" class="form-select"
+                                    asp-items="Html.GetEnumSelectList<Travellark.Models.Enums.DestinationType>()">
+                            </select>
+                            <span asp-validation-for="Type" class="text-danger"></span>
+                        </div>
+                        <div class="mb-3 col-md-6">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select"
+                                    asp-items="Html.GetEnumSelectList<Travellark.Models.Enums.DestinationStatus>()">
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <div id="rating-stars" class="mb-1">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <i class="star fa-regular fa-star fs-3 text-muted" data-value="@i"></i>
+                            }
+                        </div>
+                        <input type="hidden" asp-for="Rating" id="ratingInput" />
+                        <span asp-validation-for="Rating" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label asp-for="InspirationText" class="form-label"></label>
+                        <textarea asp-for="InspirationText" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="InspirationText" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MapUrl" class="form-label"></label>
+                        <input asp-for="MapUrl" class="form-control" />
+                        <span asp-validation-for="MapUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ImageFile" class="form-label"></label>
+                        <input asp-for="ImageFile" type="file" class="form-control" />
+                        <span asp-validation-for="ImageFile" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a asp-action="Index" class="btn btn-outline-secondary">Back</a>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+
+                </form>
             </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        const stars = document.querySelectorAll('#rating-stars .star');
+        const ratingInput = document.getElementById('ratingInput');
+
+        function updateStars(rating) {
+            stars.forEach(s => {
+                const value = s.getAttribute('data-value');
+
+                if (value <= rating) {
+                    s.classList.remove('fa-regular', 'text-muted');
+                    s.classList.add('fa-solid', 'text-warning');
+                } else {
+                    s.classList.remove('fa-solid', 'text-warning');
+                    s.classList.add('fa-regular', 'text-muted');
+                }
+            });
+        }
+
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const rating = star.getAttribute('data-value');
+                ratingInput.value = rating;
+                updateStars(rating);
+            });
+        });
+
+        if (ratingInput.value) {
+            updateStars(ratingInput.value);
+        }
+    </script>
 }
+

@@ -20,3 +20,10 @@ html {
 body {
   margin-bottom: 60px;
 }
+.star {
+    cursor: pointer;
+    transition: transform 0.1s ease-in-out;
+}
+.star:hover {
+    transform: scale(1.2);
+}

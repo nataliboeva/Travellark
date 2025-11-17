@@ -30,25 +30,38 @@ namespace Travellark.Controllers
         // GET: Destinations
         public async Task<IActionResult> Index(string? searchString, DestinationStatus? statusFilter, DestinationType? typeFilter)
         {
-            var destinations = _context.Destinations.AsQueryable();
+            var query = _context.Destinations.AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {
-                destinations = destinations.Where(d => d.Name.Contains(searchString));
+                query = query.Where(d => d.Name.Contains(searchString));
             }
 
             if (statusFilter.HasValue)
             {
-                destinations = destinations.Where(d => d.Status == statusFilter);
+                query = query.Where(d => d.Status == statusFilter);
             }
 
             if (typeFilter.HasValue)
             {
-                destinations = destinations.Where(d => d.Type == typeFilter);
+                query = query.Where(d => d.Type == typeFilter);
             }
 
-            return View(await destinations.ToListAsync());
+            var destinations = await query.ToListAsync();
+
+            var totalVisited = await _context.Destinations.CountAsync(d => d.Status == DestinationStatus.Visited);
+            var totalWishlist = await _context.Destinations.CountAsync(d => d.Status == DestinationStatus.Wishlist);
+            var avgRating = await _context.Destinations
+                .Where(d => d.Status == DestinationStatus.Visited && d.Rating.HasValue)
+                .AverageAsync(d => (double?)d.Rating) ?? 0.0;
+
+            ViewBag.TotalVisited = totalVisited;
+            ViewBag.TotalWishlist = totalWishlist;
+            ViewBag.AvgRating = avgRating;
+
+            return View(destinations);
         }
+
 
         // GET: Destinations/Details/5
         public async Task<IActionResult> Details(int? id)
@@ -140,7 +153,7 @@ namespace Travellark.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Country,Region,Type,Status,Rating,InspirationText,Notes,MapUrl,CreatedAt,VisitedAt")] Destination destination)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Country,Region,Type,Status,Rating,InspirationText,Notes,ImageUrl,ImageFile,MapUrl,CreatedAt,VisitedAt")] Destination destination)
         {
             if (id != destination.Id)
             {
@@ -149,34 +162,33 @@ namespace Travellark.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                if (destination.ImageFile != null && destination.ImageFile.Length > 0)
                 {
-                    if (ModelState.IsValid)
-                    {
-                        if (destination.Status == DestinationStatus.Visited && destination.VisitedAt == null)
-                        {
-                            destination.VisitedAt = DateTime.Now;
-                        }
+                    var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads");
 
-                        try
-                        {
-                            _context.Update(destination);
-                            await _context.SaveChangesAsync();
-                        }
-                        catch (DbUpdateConcurrencyException)
-                        {
-                            if (!DestinationExists(destination.Id))
-                            {
-                                return NotFound();
-                            }
-                            else
-                            {
-                                throw;
-                            }
-                        }
-                        return RedirectToAction(nameof(Index));
+                    if (!Directory.Exists(uploadsFolder))
+                    {
+                        Directory.CreateDirectory(uploadsFolder);
                     }
 
+                    var fileName = Guid.NewGuid().ToString() + Path.GetExtension(destination.ImageFile.FileName);
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await destination.ImageFile.CopyToAsync(stream);
+                    }
+
+                    destination.ImageUrl = "/uploads/" + fileName;
+                }
+
+                if (destination.Status == DestinationStatus.Visited && destination.VisitedAt == null)
+                {
+                    destination.VisitedAt = DateTime.Now;
+                }
+
+                try
+                {
                     _context.Update(destination);
                     await _context.SaveChangesAsync();
                 }
@@ -191,10 +203,13 @@ namespace Travellark.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             return View(destination);
         }
+
 
         // GET: Destinations/Delete/5
         public async Task<IActionResult> Delete(int? id)
