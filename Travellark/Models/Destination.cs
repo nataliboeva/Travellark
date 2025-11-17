@@ -10,6 +10,8 @@ namespace Travellark.Models
     {
         public int Id { get; set; }
 
+        public string? UserId { get; set; }
+
         [Display(Name = "Name")]
         public string Name { get; set; }
 
