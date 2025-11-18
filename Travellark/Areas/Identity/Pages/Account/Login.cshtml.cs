@@ -83,9 +83,7 @@ namespace Travellark.Areas.Identity.Pages.Account
                     userName = userByEmail.UserName!;
                 }
             }
-
             var result = await _signInManager.PasswordSignInAsync(userName, Input.Password, Input.RememberMe, lockoutOnFailure: true);
-
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
@@ -100,7 +98,12 @@ namespace Travellark.Areas.Identity.Pages.Account
                 _logger.LogWarning("User account locked out.");
                 return RedirectToPage("./Lockout");
             }
-
+            var user = await _userManager.FindByNameAsync(userName);
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                ModelState.AddModelError(string.Empty, "Email not confirmed! Please confirm your email.");
+                return Page();
+            }
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
             return Page();
         }
