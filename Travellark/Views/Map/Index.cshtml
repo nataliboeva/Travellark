@@ -14,36 +14,41 @@
     var destinationsJson = destinations != null ? JsonSerializer.Serialize(destinations, serializerOptions) : "[]";
 }
 
-<h2 class="mb-4 fw-normal">World Map</h2>
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <div>
+        <p class="text-uppercase text-secondary small mb-1 fw-semibold">Explore visually</p>
+        <h2 class="fw-semibold mb-0">World Map Overview</h2>
+    </div>
+    <div class="d-flex gap-2">
+        <span class="badge bg-success-subtle text-success fw-semibold"><i class="bi bi-check-circle-fill me-1"></i>Visited @visitedCount</span>
+        <span class="badge bg-secondary-subtle text-secondary fw-semibold"><i class="bi bi-bookmark-heart-fill me-1"></i>Wishlist @wishlistCount</span>
+        @if (hasDestinations)
+        {
+            <span class="badge bg-primary-subtle text-primary fw-semibold"><i class="bi bi-pin-map-fill me-1"></i>@(destinationsList.Cast<object>().Count()) pins</span>
+        }
+    </div>
+</div>
 
-<div class="row mb-3">
-    <div class="col-md-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body">
-                <div class="d-flex gap-4 align-items-center">
-                    <div>
-                        <span class="badge bg-success me-2">●</span>
-                        <span class="small">Visited (@visitedCount)</span>
-                    </div>
-                    <div>
-                        <span class="badge bg-secondary me-2">●</span>
-                        <span class="small">Wishlist (@wishlistCount)</span>
-                    </div>
-                    @if (hasDestinations)
-                    {
-                        <div class="ms-auto">
-                            <small class="text-muted">@(destinationsList.Cast<object>().Count()) destinations on map</small>
-                        </div>
-                    }
-                </div>
+<div class="card border-0 shadow-soft mb-4 bg-gradient" style="background: radial-gradient(circle at top left, #f7f9ff, #ffffff);">
+    <div class="card-body d-flex align-items-center gap-4 flex-wrap">
+        <div class="d-flex align-items-center gap-3">
+            <div class="icon-circle bg-primary-subtle text-primary">
+                <i class="bi bi-globe-europe-africa"></i>
             </div>
+            <div>
+                <p class="text-muted small mb-1">See your adventures</p>
+                <h5 class="mb-0 fw-semibold">Interactive world map with your destinations</h5>
+            </div>
+        </div>
+        <div class="ms-auto text-muted small">
+            Click on any marker to see quick details and jump to the destination page.
         </div>
     </div>
 </div>
 
 @if (hasDestinations)
 {
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-soft">
         <div class="card-body p-0">
             <div id="map" style="height: 600px; width: 100%;"></div>
         </div>
@@ -51,12 +56,14 @@
 }
 else
 {
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-soft">
         <div class="card-body text-center py-5">
-            <i class="fa-solid fa-map fa-3x text-muted mb-3"></i>
-            <h5 class="mb-2">No destinations with coordinates</h5>
-            <p class="text-muted mb-3">Add coordinates to your destinations to see them on the map.</p>
-            <a asp-controller="Destinations" asp-action="Create" class="btn btn-primary">Add Destination</a>
+            <div class="icon-circle icon-circle-lg bg-secondary-subtle text-secondary mb-3">
+                <i class="bi bi-map"></i>
+            </div>
+            <h5 class="mb-2 fw-semibold">No destinations with coordinates</h5>
+            <p class="text-muted mb-3">Add coordinates to your destinations or select a spot from the map picker when creating/editing.</p>
+            <a asp-controller="Destinations" asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-circle me-1"></i>Add Destination</a>
         </div>
     </div>
 }
@@ -117,14 +124,13 @@ else
 
             // Choose marker color based on status
             var markerColor = status === 'Visited' ? '#198754' : '#6c757d';
-            var markerIcon = L.divIcon({
-                className: 'custom-marker',
-                html: '<div style="background-color: ' + markerColor + '; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
+            var icon = L.divIcon({
+                html: '<div class="map-marker" style="background-color:' + markerColor + ';"><i class="bi ' + (status === 'Visited' ? 'bi-check-lg' : 'bi-heart') + '"></i></div>',
+                iconSize: [32, 32],
+                className: 'marker-wrapper'
             });
 
-            var marker = L.marker([lat, lng], { icon: markerIcon })
+            var marker = L.marker([lat, lng], { icon: icon, riseOnHover: true })
                 .addTo(map)
                 .bindPopup(popupContent);
 
@@ -154,9 +160,32 @@ else
     </script>
 
     <style>
-        .custom-marker {
-            background: transparent !important;
-            border: none !important;
+        .map-marker {
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(15, 23, 42, 0.2);
+            font-size: 1rem;
+        }
+
+        .icon-circle {
+            width: 48px;
+            height: 48px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .icon-circle-lg {
+            width: 64px;
+            height: 64px;
+            font-size: 1.5rem;
         }
     </style>
         }
