@@ -85,7 +85,7 @@
                         <div class="col-md-6 mb-3">
                             <label asp-for="Latitude" class="form-label"></label>
                             <input asp-for="Latitude" type="number" step="any" class="form-control" id="latitudeInput" placeholder="e.g. 42.6977" />
-                            <small class="form-text text-muted">Or click on map to get coordinates</small>
+                            <small class="form-text text-muted">You can also pick a point on the map below.</small>
                             <span asp-validation-for="Latitude" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -93,6 +93,12 @@
                             <input asp-for="Longitude" type="number" step="any" class="form-control" id="longitudeInput" placeholder="e.g. 23.3219" />
                             <span asp-validation-for="Longitude" class="text-danger"></span>
                         </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pick location on map</label>
+                        <div id="coordPickerMap" class="map-picker"></div>
+                        <small class="text-muted">Click anywhere on the map or drag the marker to update the coordinates.</small>
                     </div>
 
                     <div class="mb-3">
@@ -124,6 +130,9 @@
 
 
 @section Scripts {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
@@ -192,6 +201,7 @@
         const mapUrlInput = document.getElementById('mapUrlInput');
         const latitudeInput = document.getElementById('latitudeInput');
         const longitudeInput = document.getElementById('longitudeInput');
+        const coordPickerMap = document.getElementById('coordPickerMap');
 
         if (mapUrlInput) {
             mapUrlInput.addEventListener('blur', function() {
@@ -220,6 +230,52 @@
                 }
             });
         }
+
+        // Map picker
+        if (coordPickerMap && latitudeInput && longitudeInput) {
+            const defaultLat = latitudeInput.value ? parseFloat(latitudeInput.value) : 42.7339;
+            const defaultLng = longitudeInput.value ? parseFloat(longitudeInput.value) : 25.4858;
+            const map = L.map('coordPickerMap').setView([defaultLat, defaultLng], latitudeInput.value && longitudeInput.value ? 8 : 5);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            }).addTo(map);
+
+            let marker = null;
+
+            function updateMarker(lat, lng) {
+                if (!marker) {
+                    marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+                    marker.on('dragend', function (e) {
+                        const coords = e.target.getLatLng();
+                        latitudeInput.value = coords.lat.toFixed(6);
+                        longitudeInput.value = coords.lng.toFixed(6);
+                    });
+                } else {
+                    marker.setLatLng([lat, lng]);
+                }
+                latitudeInput.value = lat.toFixed(6);
+                longitudeInput.value = lng.toFixed(6);
+            }
+
+            map.on('click', function (e) {
+                updateMarker(e.latlng.lat, e.latlng.lng);
+            });
+
+            if (latitudeInput.value && longitudeInput.value) {
+                updateMarker(parseFloat(latitudeInput.value), parseFloat(longitudeInput.value));
+            }
+        }
     </script>
 }
+
+<style>
+    .map-picker {
+        height: 320px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+        overflow: hidden;
+    }
+</style>
 

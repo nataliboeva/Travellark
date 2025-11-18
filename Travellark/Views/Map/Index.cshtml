@@ -7,7 +7,11 @@
     var wishlistCount = (int)(ViewBag.WishlistCount ?? 0);
     var destinationsList = destinations as System.Collections.IEnumerable;
     var hasDestinations = destinationsList != null && destinationsList.Cast<object>().Any();
-    var destinationsJson = destinations != null ? System.Text.Json.JsonSerializer.Serialize(destinations) : "[]";
+    var serializerOptions = new JsonSerializerOptions
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
+    var destinationsJson = destinations != null ? JsonSerializer.Serialize(destinations, serializerOptions) : "[]";
 }
 
 <h2 class="mb-4 fw-normal">World Map</h2>
