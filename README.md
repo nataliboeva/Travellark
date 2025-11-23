@@ -72,7 +72,7 @@ The application focuses on simplicity and personalization, avoiding social featu
 
 ---
 
-## 📷 Screenshots (Add yours here)
+## 📷 Screenshots
 
 > **Figure 1 – Home & Navigation**  
 > <img width="1262" height="642" alt="image" src="https://github.com/user-attachments/assets/23019e9d-b692-4991-bfd9-b1d21305c24d" />
